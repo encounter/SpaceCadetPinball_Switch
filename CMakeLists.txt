@@ -6,7 +6,9 @@ set(CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/bin)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/CMakeModules")
+if (NOT NINTENDO_SWITCH)
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/CMakeModules")
+endif()
 
 # On Windows, set paths to SDL-devel packages here
 if(WIN32)
@@ -23,7 +25,9 @@ endif()
 set(SDL2_BUILDING_LIBRARY ON)
 
 find_package(SDL2 REQUIRED)
-FIND_PACKAGE(SDL2_mixer REQUIRED)
+if (NOT NINTENDO_SWITCH)
+  find_package(SDL2_mixer REQUIRED)
+endif()
 
 include_directories(${SDL2_INCLUDE_DIR} ${SDL2_MIXER_INCLUDE_DIR})
 get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
@@ -175,7 +179,7 @@ set(SOURCE_FILES
 # On Windows, include resource file with the icon
 if(WIN32)
     set_source_files_properties(SpaceCadetPinball/SpaceCadetPinball.rc LANGUAGE RC)
-    list(APPEND SOURCE_FILES SpaceCadetPinball/SpaceCadetPinball.rc)   
+    list(APPEND SOURCE_FILES SpaceCadetPinball/SpaceCadetPinball.rc)
 endif(WIN32)
 
 add_executable(SpaceCadetPinball ${SOURCE_FILES})
@@ -196,7 +200,14 @@ target_precompile_headers(SpaceCadetPinball
     SpaceCadetPinball/pch.h
 )
 
-target_link_libraries(SpaceCadetPinball ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY})
+if (NINTENDO_SWITCH)
+  set(SDL2_LIBS SDL2::SDL2 SDL2_mixer opusfile ogg opus vorbisfile vorbis vorbisidec mpg123 modplug)
+  target_link_libraries(SpaceCadetPinball ${SDL2_LIBS} ${SDL2_LIBS})
+  include(/opt/devkitpro/cmake/Switch.cmake)
+  nx_create_nro(SpaceCadetPinball ROMFS romfs)
+else()
+  target_link_libraries(SpaceCadetPinball ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY})
+endif()
 
 # On Windows, copy DLL to output
 if(WIN32)
@@ -208,7 +219,7 @@ if(WIN32)
         string(REGEX REPLACE "lib$" "bin" SDL2_DLL_PATH ${SDL2_DLL_PATH})
         string(REGEX REPLACE "lib$" "bin" SDL2_MIXER_DLL_PATH ${SDL2_MIXER_DLL_PATH})
     endif()
-    message(STATUS "copy paths='${SDL2_DLL_PATH}' '${SDL2_MIXER_DLL_PATH}'") 
+    message(STATUS "copy paths='${SDL2_DLL_PATH}' '${SDL2_MIXER_DLL_PATH}'")
     add_custom_command(TARGET SpaceCadetPinball POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SDL2_DLL_PATH}/SDL2.dll" $<TARGET_FILE_DIR:SpaceCadetPinball>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SDL2_MIXER_DLL_PATH}/SDL2_mixer.dll" $<TARGET_FILE_DIR:SpaceCadetPinball>

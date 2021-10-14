@@ -51,7 +51,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	// SDL init
 	SDL_SetMainReady();
-	if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
 	{
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not initialize SDL2", SDL_GetError(), nullptr);
 		return 1;
@@ -112,9 +112,11 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	ImGui_ImplSDL2_InitForOpenGL(window, nullptr);
 
 	auto prefPath = SDL_GetPrefPath(nullptr, "SpaceCadetPinball");
-	auto iniPath = std::string(prefPath) + "imgui_pb.ini";
-	io.IniFilename = iniPath.c_str();
-	SDL_free(prefPath);
+        if (prefPath != nullptr) {
+          auto iniPath = std::string(prefPath) + "imgui_pb.ini";
+          io.IniFilename = iniPath.c_str();
+          SDL_free(prefPath);
+        }
 
 	// PB init from message handler
 	{
@@ -218,7 +220,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 				float dx = (last_mouse_x - x) / static_cast<float>(w);
 				float dy = (y - last_mouse_y) / static_cast<float>(h);
 				pb::ballset(dx, dy);
-				
+
 				SDL_WarpMouseInWindow(window, last_mouse_x, last_mouse_y);
 
 				// Mouse warp does not work over remote desktop or in some VMs

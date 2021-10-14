@@ -5,6 +5,10 @@
 
 #include "winmain.h"
 
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
+
 int MainActual(LPCSTR lpCmdLine)
 {
 	// Todo: get rid of restart to change resolution.
@@ -19,11 +23,20 @@ int MainActual(LPCSTR lpCmdLine)
 
 int main(int argc, char* argv[])
 {
+#ifdef __SWITCH__
+        romfsInit();
+        chdir("romfs:/");
+#endif
+
 	std::string cmdLine;
 	for (int i = 1; i < argc; i++)
 		cmdLine += argv[i];
 
-	return MainActual(cmdLine.c_str());
+        int ret = MainActual(cmdLine.c_str());
+#ifdef __SWITCH__
+        romfsExit();
+#endif
+	return ret;
 }
 
 #if _WIN32
@@ -39,7 +52,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu
 
-// Tips for Getting Started: 
+// Tips for Getting Started:
 //   1. Use the Solution Explorer window to add/manage files
 //   2. Use the Team Explorer window to connect to source control
 //   3. Use the Output window to see build output and other messages
